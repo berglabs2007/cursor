@@ -132,7 +132,7 @@ att en mäklare inte kan höja sin egen roll.
 - [x] Steg 1: Projektinit (Next.js + Tailwind + shadcn/ui + Supabase CLI)
 - [x] Steg 2: Databasmigrationer + RLS-policies + RLS-tester
 - [x] Steg 3: Auth-flöde (registrering av byrå, Google OAuth, inbjudan av mäklare)
-- [ ] Steg 4: `generate-listing` + annonsformulär
+- [x] Steg 4: `generate-listing` + annonsformulär (E2E-testad mot produktion, se `scripts/e2e-smoke.mjs`)
 - [ ] Steg 5: `analyze-images` + bilduppladdning
 - [ ] Steg 6: `export-listing` (Word) + dashboard
 - [ ] Steg 7: Stripe Checkout + `stripe-webhook`
