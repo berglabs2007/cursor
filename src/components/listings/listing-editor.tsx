@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GenerationPanel } from "@/components/listings/generation-panel";
+import { ExportListingButton } from "@/components/listings/export-listing-button";
 import { ImageSection } from "@/components/listings/image-section";
 import { ListingForm } from "@/components/listings/listing-form";
 import { VersionHistory } from "@/components/listings/version-history";
@@ -57,6 +58,12 @@ export function ListingEditor({ listing, images, versions, autoStart }: ListingE
       : null,
   ].filter(Boolean);
 
+  const hasGeneratedText = Boolean(
+    listing.generated_text?.headline?.trim() ||
+      listing.generated_text?.body?.trim() ||
+      listing.generated_text?.facts?.trim()
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -74,6 +81,11 @@ export function ListingEditor({ listing, images, versions, autoStart }: ListingE
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <ExportListingButton
+            listingId={listing.id}
+            address={listing.address}
+            disabled={!hasGeneratedText}
+          />
           <VersionHistory listingId={listing.id} versions={versions} />
           <Button
             variant="outline"
