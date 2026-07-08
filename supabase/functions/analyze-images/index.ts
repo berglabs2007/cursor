@@ -15,6 +15,7 @@
 import { AuthError, requireAuth } from "../_shared/auth.ts";
 import { errorResponse, handleOptions, jsonResponse } from "../_shared/http.ts";
 import { AnthropicError, completeClaude } from "../_shared/anthropic.ts";
+import { requireActiveSubscription, SubscriptionError } from "../_shared/subscription-guard.ts";
 import {
   IMAGE_ANALYSIS_SYSTEM_PROMPT,
   IMAGE_ANALYSIS_USER_PROMPT,
@@ -58,6 +59,7 @@ Deno.serve(async (req) => {
 
   try {
     const ctx = await requireAuth(req);
+    await requireActiveSubscription(ctx);
 
     let body: AnalyzeRequest;
     try {
@@ -151,7 +153,7 @@ Deno.serve(async (req) => {
       prompt_version: IMAGE_PROMPT_VERSION,
     });
   } catch (error) {
-    if (error instanceof AuthError) {
+    if (error instanceof AuthError || error instanceof SubscriptionError) {
       return errorResponse(error.message, error.status);
     }
     if (error instanceof AnthropicError) {

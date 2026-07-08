@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { callEdgeFunction } from "@/lib/edge-functions";
 
 interface RevokeInvitationButtonProps {
   invitationId: string;
@@ -32,6 +33,7 @@ export function RevokeInvitationButton({ invitationId, email }: RevokeInvitation
     }
 
     toast.success(`Inbjudan till ${email} har återkallats.`);
+    await callEdgeFunction("sync-seats", {}).catch(() => undefined);
     router.refresh();
   }
 

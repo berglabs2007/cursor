@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { createClient } from "@/lib/supabase/client";
+import { callEdgeFunction } from "@/lib/edge-functions";
 
 interface MemberActionsProps {
   memberId: string;
@@ -45,6 +46,7 @@ export function MemberActions({ memberId, memberName }: MemberActionsProps) {
 
     toast.success(`${memberName} har tagits bort från byrån.`);
     setShowConfirm(false);
+    await callEdgeFunction("sync-seats", {}).catch(() => undefined);
     router.refresh();
   }
 

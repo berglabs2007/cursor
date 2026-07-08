@@ -119,6 +119,48 @@ Testerna verifierar bl.a. att en organisation aldrig kan läsa, ändra eller
 radera en annan organisations data, att `created_by` inte kan förfalskas och
 att en mäklare inte kan höja sin egen roll.
 
+## Stripe (betalning)
+
+BergLabs fakturerar **500 kr per mäklare och månad** (inkl. moms) via seat-baserad
+Stripe-prenumeration.
+
+### 1. Skapa produkt i Stripe Dashboard
+
+1. Gå till [Stripe Dashboard → Products](https://dashboard.stripe.com/products).
+2. Skapa en produkt t.ex. "BergLabs per seat".
+3. Lägg till ett **recurring** pris: **500 SEK / month**, **Licensed** (per-seat/quantity).
+4. Kopiera **Price ID** (`price_...`) till `STRIPE_PRICE_ID` i `supabase/.env`.
+
+### 2. Sätt secrets och deploya funktioner
+
+```bash
+# Lägg till STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID i supabase/.env
+npx supabase secrets set --env-file supabase/.env
+npx supabase functions deploy create-checkout create-portal sync-seats stripe-webhook --use-api
+```
+
+Lägg även till `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` i `.env.local` (för framtida
+Stripe.js-integration; Checkout sker via redirect idag).
+
+### 3. Webhook-endpoint
+
+1. Stripe Dashboard → Developers → Webhooks → Add endpoint.
+2. URL: `https://<DIN_PROJECT_REF>.supabase.co/functions/v1/stripe-webhook`
+3. Välj dessa events:
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `invoice.payment_failed`
+4. Kopiera **Signing secret** (`whsec_...`) till `STRIPE_WEBHOOK_SECRET`.
+
+### 4. Flöde
+
+- Ny byrå registreras → ägaren dirigeras till **Inställningar** → Stripe Checkout.
+- Webhook uppdaterar `organizations.subscription_status` och `subscriptions`.
+- När mäklare bjuds in uppdateras Stripe-quantity automatiskt (`sync-seats`).
+- **Mina betalningsuppgifter** öppnar Stripe Customer Portal.
+
 ## Deploy till Vercel
 
 1. Pusha repot till GitHub och importera det i [Vercel](https://vercel.com/new).
@@ -135,4 +177,4 @@ att en mäklare inte kan höja sin egen roll.
 - [x] Steg 4: `generate-listing` + annonsformulär (E2E-testad mot produktion, se `scripts/e2e-smoke.mjs`)
 - [x] Steg 5: `analyze-images` + bilduppladdning (drag-and-drop, per-bild-analys, redigera/bekräfta)
 - [x] Steg 6: `export-listing` (Word) + sökbar/filtrerbar dashboard
-- [ ] Steg 7: Stripe Checkout + `stripe-webhook`
+- [x] Steg 7: Stripe Checkout + seat-sync + Customer Portal + `stripe-webhook`

@@ -414,6 +414,15 @@ verify_jwt = true
 [functions.invite-user]
 verify_jwt = true
 
+[functions.create-checkout]
+verify_jwt = true
+
+[functions.create-portal]
+verify_jwt = true
+
+[functions.sync-seats]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327
