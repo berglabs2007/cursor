@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import {
   Card,
@@ -6,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { SubscriptionPanel } from "@/components/billing/subscription-panel";
+import { BillingInfo } from "@/components/billing/billing-info";
 import { requireSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,26 +13,17 @@ export const metadata: Metadata = {
   title: "Inställningar",
 };
 
-interface SettingsPageProps {
-  searchParams: Promise<{ starta?: string }>;
-}
-
-export default async function SettingsPage({ searchParams }: SettingsPageProps) {
+export default async function SettingsPage() {
   const { profile, organization } = await requireSession();
-  const { starta } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: subscription }, { count: profileCount }, { count: inviteCount }] =
-    await Promise.all([
-      supabase.from("subscriptions").select("*").maybeSingle(),
-      supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true }),
-      supabase
-        .from("invitations")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending"),
-    ]);
+  const [{ count: profileCount }, { count: inviteCount }] = await Promise.all([
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
+    supabase
+      .from("invitations")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+  ]);
 
   const usedSeats = (profileCount ?? 0) + (inviteCount ?? 0);
 
@@ -41,9 +31,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Inställningar</h1>
-        <p className="text-sm text-muted-foreground">
-          Byråns uppgifter och prenumeration.
-        </p>
+        <p className="text-sm text-muted-foreground">Byråns uppgifter och fakturering.</p>
       </div>
 
       <Card>
@@ -72,16 +60,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </CardContent>
       </Card>
 
-      <Suspense>
-        <SubscriptionPanel
-          role={profile.role}
-          subscriptionStatus={organization.subscription_status}
-          seatsPurchased={organization.seats_purchased}
-          usedSeats={usedSeats}
-          subscription={subscription}
-          autoStartCheckout={starta === "1"}
-        />
-      </Suspense>
+      <BillingInfo usedSeats={usedSeats} seatsPurchased={organization.seats_purchased} />
     </div>
   );
 }

@@ -397,11 +397,6 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
-# Stripe calls this endpoint without a Supabase JWT; the function verifies the
-# Stripe signature itself instead.
-[functions.stripe-webhook]
-verify_jwt = false
-
 [functions.generate-listing]
 verify_jwt = true
 
@@ -412,15 +407,6 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.invite-user]
-verify_jwt = true
-
-[functions.create-checkout]
-verify_jwt = true
-
-[functions.create-portal]
-verify_jwt = true
-
-[functions.sync-seats]
 verify_jwt = true
 
 [analytics]

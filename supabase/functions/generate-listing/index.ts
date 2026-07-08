@@ -20,7 +20,6 @@
 import { AuthError, requireAuth, requireListingInOrg } from "../_shared/auth.ts";
 import { corsHeaders, errorResponse, handleOptions } from "../_shared/http.ts";
 import { AnthropicError, streamClaudeText } from "../_shared/anthropic.ts";
-import { requireActiveSubscription, SubscriptionError } from "../_shared/subscription-guard.ts";
 import {
   buildFactSheet,
   buildPartPrompt,
@@ -63,7 +62,6 @@ Deno.serve(async (req) => {
 
   try {
     ctx = await requireAuth(req);
-    await requireActiveSubscription(ctx);
 
     let body: GenerateRequest;
     try {
@@ -85,7 +83,7 @@ Deno.serve(async (req) => {
     // Ownership check: 404 if the listing is not in the caller's org.
     listing = await requireListingInOrg(ctx, body.listing_id);
   } catch (error) {
-    if (error instanceof AuthError || error instanceof SubscriptionError) {
+    if (error instanceof AuthError) {
       return errorResponse(error.message, error.status);
     }
     console.error("generate-listing: setup failed", error);

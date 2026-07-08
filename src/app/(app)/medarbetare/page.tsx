@@ -21,6 +21,7 @@ import { MemberActions } from "@/components/team/member-actions";
 import { RevokeInvitationButton } from "@/components/team/revoke-invitation-button";
 import { requireSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { SEAT_PRICE_SEK } from "@/lib/subscription";
 import type { UserRole } from "@/lib/database.types";
 
 export const metadata: Metadata = {
@@ -57,8 +58,6 @@ export default async function TeamPage() {
   const memberCount = members?.length ?? 0;
   const pendingCount = invitations?.length ?? 0;
   const usedSeats = memberCount + pendingCount;
-  const hasSubscription = organization.subscription_status === "active" ||
-    organization.subscription_status === "trialing";
 
   return (
     <div className="space-y-6">
@@ -76,18 +75,9 @@ export default async function TeamPage() {
         <CardHeader>
           <CardTitle className="text-base">Platser (seats)</CardTitle>
           <CardDescription>
-            {hasSubscription ? (
-              <>
-                {usedSeats} av {organization.seats_purchased} betalda platser används
-                ({memberCount} aktiva, {pendingCount} väntande inbjudningar).
-                Fakturering: 500 kr per mäklare och månad inkl. moms.
-              </>
-            ) : (
-              <>
-                {usedSeats} platser används ({memberCount} aktiva, {pendingCount} väntande
-                inbjudningar). Ingen aktiv prenumeration ännu – starta en under Inställningar.
-              </>
-            )}
+            {usedSeats} platser används ({memberCount} aktiva, {pendingCount} väntande
+            inbjudningar). Fakturering: {SEAT_PRICE_SEK} kr per mäklare och månad inkl.
+            moms – fakturor skickas separat.
           </CardDescription>
         </CardHeader>
       </Card>

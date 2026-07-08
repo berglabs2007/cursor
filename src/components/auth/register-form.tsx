@@ -71,7 +71,7 @@ export function RegisterForm() {
       return;
     }
 
-    router.push("/installningar?starta=1");
+    router.push("/dashboard");
     router.refresh();
   }
 

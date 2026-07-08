@@ -7,7 +7,6 @@
 import { AuthError, requireAuth, requireListingInOrg } from "../_shared/auth.ts";
 import { buildExportFilename, buildListingDocx } from "../_shared/export-docx.ts";
 import { corsHeaders, errorResponse, handleOptions } from "../_shared/http.ts";
-import { requireActiveSubscription, SubscriptionError } from "../_shared/subscription-guard.ts";
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   villa: "Villa",
@@ -26,7 +25,6 @@ Deno.serve(async (req) => {
 
   try {
     const ctx = await requireAuth(req);
-    await requireActiveSubscription(ctx);
 
     let body: ExportRequest;
     try {
@@ -101,7 +99,7 @@ Deno.serve(async (req) => {
       },
     });
   } catch (error) {
-    if (error instanceof AuthError || error instanceof SubscriptionError) {
+    if (error instanceof AuthError) {
       return errorResponse(error.message, error.status);
     }
     console.error("export-listing: unexpected error", error);

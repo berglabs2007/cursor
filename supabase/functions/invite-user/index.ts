@@ -6,13 +6,9 @@
  *  2. Records the invitation in public.invitations.
  *  3. Sends a Supabase invite email with organization metadata that the
  *     handle_new_user() trigger uses to attach the profile.
- *
- * Seat billing note: adding members affects Stripe subscription quantity –
- * that sync happens in this function when a Stripe subscription exists.
  */
 import { AuthError, requireAuth } from "../_shared/auth.ts";
 import { errorResponse, handleOptions, jsonResponse } from "../_shared/http.ts";
-import { syncStripeSeatQuantity, countUsedSeats } from "../_shared/stripe.ts";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -86,23 +82,6 @@ Deno.serve(async (req) => {
       return errorResponse("Kunde inte spara inbjudan. Försök igen.", 500);
     }
 
-    const seatCount = await countUsedSeats(ctx.admin, ctx.organizationId);
-
-    try {
-      await syncStripeSeatQuantity(ctx.admin, ctx.organizationId, seatCount);
-    } catch (syncError) {
-      console.error("invite-user: seat sync failed", syncError);
-      await ctx.admin
-        .from("invitations")
-        .delete()
-        .eq("organization_id", ctx.organizationId)
-        .eq("email", email);
-      return errorResponse(
-        "Platserna kunde inte uppdateras hos Stripe. Kontrollera er prenumeration och försök igen.",
-        402
-      );
-    }
-
     const appUrl = Deno.env.get("APP_URL") ?? "http://localhost:3000";
     const { error: inviteError } = await ctx.admin.auth.admin.inviteUserByEmail(email, {
       redirectTo: `${appUrl}/auth/confirm`,
@@ -119,7 +98,6 @@ Deno.serve(async (req) => {
         .delete()
         .eq("organization_id", ctx.organizationId)
         .eq("email", email);
-      await syncStripeSeatQuantity(ctx.admin, ctx.organizationId).catch(() => undefined);
 
       if (inviteError.code === "email_exists") {
         return errorResponse("E-postadressen används redan av ett annat konto.", 409);

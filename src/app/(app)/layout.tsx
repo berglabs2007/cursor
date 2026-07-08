@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { MainNav } from "@/components/layout/main-nav";
 import { UserMenu } from "@/components/layout/user-menu";
-import { SubscriptionBanner } from "@/components/billing/subscription-banner";
 import { requireSession } from "@/lib/auth";
 
 export default async function AppLayout({
@@ -11,10 +10,6 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-svh flex-col bg-muted/30">
-      <SubscriptionBanner
-        subscriptionStatus={organization.subscription_status}
-        role={profile.role}
-      />
       <header className="sticky top-0 z-40 border-b bg-background">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
           <div className="flex items-center gap-2 md:gap-8">
