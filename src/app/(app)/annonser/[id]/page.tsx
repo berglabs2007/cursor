@@ -29,7 +29,7 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
   const supabase = await createClient();
 
   // RLS guarantees only the caller's organization's listing is returned.
-  const [{ data: listing }, { data: versions }] = await Promise.all([
+  const [{ data: listing }, { data: versions }, { data: images }] = await Promise.all([
     supabase.from("listings").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("listing_versions")
@@ -37,6 +37,11 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
       .eq("listing_id", id)
       .order("created_at", { ascending: false })
       .limit(20),
+    supabase
+      .from("listing_images")
+      .select("*")
+      .eq("listing_id", id)
+      .order("sort_order", { ascending: true }),
   ]);
 
   if (!listing) {
@@ -46,6 +51,7 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
   return (
     <ListingEditor
       listing={listing}
+      images={images ?? []}
       versions={versions ?? []}
       autoStart={generera === "1" && !listing.generated_text}
     />

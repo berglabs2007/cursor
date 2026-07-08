@@ -133,6 +133,6 @@ att en mäklare inte kan höja sin egen roll.
 - [x] Steg 2: Databasmigrationer + RLS-policies + RLS-tester
 - [x] Steg 3: Auth-flöde (registrering av byrå, Google OAuth, inbjudan av mäklare)
 - [x] Steg 4: `generate-listing` + annonsformulär (E2E-testad mot produktion, se `scripts/e2e-smoke.mjs`)
-- [ ] Steg 5: `analyze-images` + bilduppladdning
+- [x] Steg 5: `analyze-images` + bilduppladdning (drag-and-drop, per-bild-analys, redigera/bekräfta)
 - [ ] Steg 6: `export-listing` (Word) + dashboard
 - [ ] Steg 7: Stripe Checkout + `stripe-webhook`

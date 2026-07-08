@@ -8,19 +8,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GenerationPanel } from "@/components/listings/generation-panel";
+import { ImageSection } from "@/components/listings/image-section";
 import { ListingForm } from "@/components/listings/listing-form";
 import { VersionHistory } from "@/components/listings/version-history";
 import { createClient } from "@/lib/supabase/client";
 import { PROPERTY_TYPE_LABELS, STATUS_LABELS } from "@/lib/listing-constants";
-import type { Listing, ListingVersion } from "@/lib/database.types";
+import type { Listing, ListingImage, ListingVersion } from "@/lib/database.types";
 
 interface ListingEditorProps {
   listing: Listing;
+  images: ListingImage[];
   versions: ListingVersion[];
   autoStart: boolean;
 }
 
-export function ListingEditor({ listing, versions, autoStart }: ListingEditorProps) {
+export function ListingEditor({ listing, images, versions, autoStart }: ListingEditorProps) {
   const router = useRouter();
   const [showDetails, setShowDetails] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
@@ -114,6 +116,12 @@ export function ListingEditor({ listing, versions, autoStart }: ListingEditorPro
           </CardContent>
         ) : null}
       </Card>
+
+      <ImageSection
+        listingId={listing.id}
+        organizationId={listing.organization_id}
+        initialImages={images}
+      />
 
       <GenerationPanel
         listingId={listing.id}
