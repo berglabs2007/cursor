@@ -409,6 +409,9 @@ verify_jwt = true
 [functions.invite-user]
 verify_jwt = true
 
+[functions.delete-organization]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327

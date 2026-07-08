@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { BillingInfo } from "@/components/billing/billing-info";
+import { DeleteOrganizationPanel } from "@/components/settings/delete-organization-panel";
 import { requireSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -61,6 +62,10 @@ export default async function SettingsPage() {
       </Card>
 
       <BillingInfo usedSeats={usedSeats} seatsPurchased={organization.seats_purchased} />
+
+      {profile.role === "owner" ? (
+        <DeleteOrganizationPanel organizationName={organization.name} />
+      ) : null}
     </div>
   );
 }

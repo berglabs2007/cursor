@@ -10,9 +10,9 @@ import { callEdgeFunction, EdgeFunctionError } from "@/lib/edge-functions";
 import {
   ACCEPTED_IMAGE_TYPES,
   compressImage,
-  MAX_IMAGES_PER_LISTING,
 } from "@/lib/image-utils";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 import type { ImageAnalysisResult, ListingImage } from "@/lib/database.types";
 
 const ANALYSIS_CONCURRENCY = 2;
@@ -36,11 +36,11 @@ export function ImageSection({ listingId, organizationId, initialImages }: Image
       storagePath: image.storage_path,
       previewUrl: null,
       analysis: image.ai_analysis_result,
-      status: image.ai_analysis_result ? "done" : "analyzing",
-      // Images without analysis (e.g. an interrupted session) get retried below.
+      status: image.ai_analysis_result ? "done" : "pending",
     }))
   );
   const [isDragging, setIsDragging] = useState(false);
+  const [autoAnalyze, setAutoAnalyze] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeAnalysesRef = useRef(0);
   const queueRef = useRef<string[]>([]);
@@ -112,7 +112,7 @@ export function ImageSection({ listingId, organizationId, initialImages }: Image
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Retry analysis for images that were uploaded but never analyzed.
+  // Auto-analyze pending images on load when auto mode is enabled.
   useEffect(() => {
     if (initialAnalysisTriggeredRef.current) return;
     initialAnalysisTriggeredRef.current = true;
@@ -120,9 +120,8 @@ export function ImageSection({ listingId, organizationId, initialImages }: Image
     const pendingIds = initialImages
       .filter((image) => !image.ai_analysis_result)
       .map((image) => image.id);
-    if (pendingIds.length === 0) return;
+    if (pendingIds.length === 0 || !autoAnalyze) return;
 
-    // Deferred so state updates never happen synchronously in the effect.
     const timer = setTimeout(() => {
       for (const id of pendingIds) enqueueAnalysis(id);
     }, 0);
@@ -137,10 +136,6 @@ export function ImageSection({ listingId, organizationId, initialImages }: Image
 
     if (files.length === 0) {
       toast.error("Endast JPEG-, PNG- och WebP-bilder stöds.");
-      return;
-    }
-    if (items.length + files.length > MAX_IMAGES_PER_LISTING) {
-      toast.error(`Max ${MAX_IMAGES_PER_LISTING} bilder per annons.`);
       return;
     }
 
@@ -186,10 +181,19 @@ export function ImageSection({ listingId, organizationId, initialImages }: Image
 
         setItems((previous) =>
           previous.map((item) =>
-            item.id === temporaryId ? { ...item, id: row.id, storagePath } : item
+            item.id === temporaryId
+              ? {
+                  ...item,
+                  id: row.id,
+                  storagePath,
+                  status: autoAnalyze ? "analyzing" : "pending",
+                }
+              : item
           )
         );
-        enqueueAnalysis(row.id);
+        if (autoAnalyze) {
+          enqueueAnalysis(row.id);
+        }
       } catch (error) {
         console.error("image upload failed", error);
         setItems((previous) => previous.filter((item) => item.id !== temporaryId));
@@ -249,13 +253,23 @@ export function ImageSection({ listingId, organizationId, initialImages }: Image
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold">Bilder</h2>
-        {items.length > 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {doneCount} av {items.length} bilder används som underlag
-          </p>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-4">
+          <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <Switch
+              checked={autoAnalyze}
+              onCheckedChange={setAutoAnalyze}
+              aria-label="Analysera bilder automatiskt vid uppladdning"
+            />
+            Auto-analys
+          </label>
+          {items.length > 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {doneCount} av {items.length} bilder används som underlag
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <Card
@@ -285,8 +299,8 @@ export function ImageSection({ listingId, organizationId, initialImages }: Image
             Dra och släpp bilder här, eller klicka för att välja
           </p>
           <p className="text-xs text-muted-foreground">
-            5–20 bilder rekommenderas · JPEG, PNG eller WebP · Varje bild analyseras
-            automatiskt av AI
+            5–20 bilder rekommenderas · JPEG, PNG eller WebP · Auto-analys kan stängas av
+            för manuell analys per bild
           </p>
           <input
             ref={fileInputRef}

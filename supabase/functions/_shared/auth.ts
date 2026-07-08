@@ -87,8 +87,8 @@ export async function requireAuth(req: Request): Promise<AuthContext> {
 }
 
 /**
- * Verifies that a listing belongs to the caller's organization.
- * Returns the listing row (service-role read) or throws 404.
+ * Verifies that a listing belongs to the caller's organization and was
+ * created by the caller. Returns the listing row or throws 404.
  */
 export async function requireListingInOrg(
   ctx: AuthContext,
@@ -99,13 +99,14 @@ export async function requireListingInOrg(
     .select("*")
     .eq("id", listingId)
     .eq("organization_id", ctx.organizationId)
+    .eq("created_by", ctx.userId)
     .maybeSingle();
 
   if (error) {
     throw new AuthError("Kunde inte läsa annonsen. Försök igen.", 500);
   }
   if (!listing) {
-    throw new AuthError("Annonsen finns inte eller tillhör inte din byrå.", 404);
+    throw new AuthError("Annonsen finns inte eller tillhör inte dig.", 404);
   }
 
   return listing;

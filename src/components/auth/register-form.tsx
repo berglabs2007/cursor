@@ -147,6 +147,20 @@ export function RegisterForm() {
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Skapar konto…" : "Skapa konto"}
         </Button>
+        <p className="text-center text-xs text-muted-foreground">
+          Genom att registrera godkänner du våra{" "}
+          <Link href="/villkor" className="underline underline-offset-4 hover:text-foreground">
+            villkor
+          </Link>{" "}
+          och{" "}
+          <Link
+            href="/integritetspolicy"
+            className="underline underline-offset-4 hover:text-foreground"
+          >
+            integritetspolicy
+          </Link>
+          .
+        </p>
       </form>
 
       <p className="text-center text-sm text-muted-foreground">

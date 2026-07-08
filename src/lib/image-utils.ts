@@ -4,7 +4,6 @@ const MAX_DIMENSION = 2000;
 const JPEG_QUALITY = 0.85;
 
 export const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-export const MAX_IMAGES_PER_LISTING = 20;
 
 /**
  * Downscales and re-encodes an image to JPEG in the browser so uploads

@@ -1,12 +1,19 @@
 /**
  * export-listing
  *
- * Exports a listing as a formatted Word document (.docx) ready to paste
- * into Hemnet, Vitec or other broker systems.
+ * Exports a listing as Word, Hemnet text, PDF, or social media captions.
  */
 import { AuthError, requireAuth, requireListingInOrg } from "../_shared/auth.ts";
-import { buildExportFilename, buildListingDocx } from "../_shared/export-docx.ts";
-import { corsHeaders, errorResponse, handleOptions } from "../_shared/http.ts";
+import { AnthropicError } from "../_shared/anthropic.ts";
+import {
+  buildExportFilename,
+  buildListingDocx,
+  type ListingExportData,
+} from "../_shared/export-docx.ts";
+import { buildHemnetFilename, buildHemnetText } from "../_shared/export-hemnet.ts";
+import { buildListingPdf, buildPdfFilename } from "../_shared/export-pdf.ts";
+import { generateSocialCaptions } from "../_shared/export-social.ts";
+import { corsHeaders, errorResponse, handleOptions, jsonResponse } from "../_shared/http.ts";
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   villa: "Villa",
@@ -15,8 +22,11 @@ const PROPERTY_TYPE_LABELS: Record<string, string> = {
   vacation_home: "Fritidshus",
 };
 
+type ExportFormat = "docx" | "hemnet" | "pdf" | "social";
+
 interface ExportRequest {
   listing_id?: string;
+  format?: ExportFormat;
 }
 
 Deno.serve(async (req) => {
@@ -37,6 +47,7 @@ Deno.serve(async (req) => {
       return errorResponse("Annons-id saknas.", 400);
     }
 
+    const format: ExportFormat = body.format ?? "docx";
     const listing = await requireListingInOrg(ctx, body.listing_id);
 
     const generatedText = listing.generated_text as {
@@ -68,7 +79,7 @@ Deno.serve(async (req) => {
       return errorResponse("Kunde inte läsa byråns uppgifter. Försök igen.", 500);
     }
 
-    const buffer = await buildListingDocx({
+    const exportData: ListingExportData = {
       address: (listing.address as string) ?? "",
       organizationName: organization.name as string,
       propertyTypeLabel:
@@ -83,12 +94,47 @@ Deno.serve(async (req) => {
       operatingCost: listing.operating_cost as number | null,
       buildYear: listing.build_year as number | null,
       generatedText,
-    });
+    };
 
-    const filename = buildExportFilename((listing.address as string) ?? "export");
-    const fileBytes = Uint8Array.from(buffer);
+    const address = exportData.address || "export";
 
-    return new Response(fileBytes, {
+    if (format === "social") {
+      const captions = await generateSocialCaptions(exportData);
+      return jsonResponse(captions);
+    }
+
+    if (format === "hemnet") {
+      const text = buildHemnetText(exportData);
+      const filename = buildHemnetFilename(address);
+      return new Response(text, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/plain; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+
+    if (format === "pdf") {
+      const buffer = await buildListingPdf(exportData);
+      const filename = buildPdfFilename(address);
+      return new Response(buffer, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+
+    const buffer = await buildListingDocx(exportData);
+    const filename = buildExportFilename(address);
+
+    return new Response(Uint8Array.from(buffer), {
       status: 200,
       headers: {
         ...corsHeaders,
@@ -100,6 +146,9 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     if (error instanceof AuthError) {
+      return errorResponse(error.message, error.status);
+    }
+    if (error instanceof AnthropicError) {
       return errorResponse(error.message, error.status);
     }
     console.error("export-listing: unexpected error", error);

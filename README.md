@@ -120,6 +120,17 @@ manuellt till kunden utanför appen – det finns ingen in-app-betalning.
 Antal aktiva platser (medarbetare + väntande inbjudningar) visas under
 **Inställningar** och **Medarbetare** så att ni enkelt kan följa upp mot fakturan.
 
+## GDPR och juridik
+
+- **Integritetspolicy:** `/integritetspolicy`
+- **Användarvillkor:** `/villkor`
+- **Cookies:** endast nödvändiga sessionscookies (banner visas vid första besök)
+- **Radering:** byråägare kan permanent radera all byrådata under **Inställningar**
+  (Edge Function `delete-organization`)
+
+Uppdatera kontaktadresser i `src/lib/site.ts` (`privacyEmail`, `supportEmail`) innan
+produktionslansering.
+
 ## Deploy till Vercel
 
 1. Pusha repot till GitHub och importera det i [Vercel](https://vercel.com/new).
@@ -137,3 +148,4 @@ Antal aktiva platser (medarbetare + väntande inbjudningar) visas under
 - [x] Steg 5: `analyze-images` + bilduppladdning (drag-and-drop, per-bild-analys, redigera/bekräfta)
 - [x] Steg 6: `export-listing` (Word) + sökbar/filtrerbar dashboard
 - [x] Steg 7: Manuell fakturering (Stripe borttaget)
+- [x] GDPR: integritetspolicy, villkor, cookie-banner och radering av byrådata

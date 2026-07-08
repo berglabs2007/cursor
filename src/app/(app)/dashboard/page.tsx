@@ -8,12 +8,13 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  const { organization } = await requireSession();
+  const { organization, profile } = await requireSession();
   const supabase = await createClient();
 
   const { data: listings } = await supabase
     .from("listings")
     .select("id, address, property_type, status, updated_at")
+    .eq("created_by", profile.id)
     .order("updated_at", { ascending: false });
 
   return (

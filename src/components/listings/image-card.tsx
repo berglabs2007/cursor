@@ -20,7 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type { ImageAnalysisResult } from "@/lib/database.types";
 
-export type ImageStatus = "uploading" | "analyzing" | "done" | "error";
+export type ImageStatus = "uploading" | "pending" | "analyzing" | "done" | "error";
 
 export interface ListingImageItem {
   id: string;
@@ -41,6 +41,7 @@ interface ImageCardProps {
 
 const STATUS_LABEL: Record<ImageStatus, string> = {
   uploading: "Laddar upp…",
+  pending: "Väntar på analys",
   analyzing: "Analyserar…",
   done: "Analyserad",
   error: "Fel",
@@ -132,6 +133,11 @@ export function ImageCard({
               Analysera igen
             </Button>
           </div>
+        ) : item.status === "pending" ? (
+          <Button variant="outline" size="sm" className="w-full" onClick={() => onRetry(item.id)}>
+            <RefreshCw className="size-3.5" />
+            Analysera
+          </Button>
         ) : null}
 
         {analysis && item.status === "done" ? (
